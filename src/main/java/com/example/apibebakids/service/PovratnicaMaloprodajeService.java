@@ -139,7 +139,7 @@ public class PovratnicaMaloprodajeService {
                         "                <sifraMagacina>%s</sifraMagacina>\n" +
                         "                <sifraMaloprodajnogObjekta>%s</sifraMaloprodajnogObjekta>\n" +
                         "                %s\n" +
-                        "                <vrstaKnjizenjaPovrataMagacin>1</vrstaKnjizenjaPovrataMagacin>\n" +
+                        "                <vrstaKnjizenjaPovrataMagacin>SamoIzlaz</vrstaKnjizenjaPovrataMagacin>\n" +
                         "            </povrati>\n" +
                         "        </dodajNalogZaPovratIzMaloprodajeUMagacin>\n" +
                         "    </Body>\n" +
