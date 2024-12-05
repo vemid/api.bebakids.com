@@ -50,23 +50,23 @@ public class EmailService {
 select email from (
     select "WarehouseToStore" document_type, o.ozn_otp_mal document,ob.napomena email from otprem_mp o
     left join magacin ob on ob.sif_mag = o.sif_mag
-    where o.vrs_knj = 2 and o.dat_otp_mal >=today-60 and o.storno = 'N' and o.status = 1
-    and o.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-60)
+    where o.vrs_knj in ('2','3') and o.dat_otp_mal >=today-100 and o.storno = 'N' and o.status = 1
+    and o.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-100)
     union all
     select "StoreToStore" document_type,o.ozn_pre_mp document, ob.e_mail email from pren_mp o
     left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_izl
-    where o.vrs_knj = 2 and o.dat_knj >=today-60 and o.storno = 'N' and o.status = 1
-    and o.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-60)
+    where o.vrs_knj in ('2','3') and o.dat_knj >=today-100 and o.storno = 'N' and o.status = 1
+    and o.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-100)
     union all
     select "StoreToWarehouse" document_type,o.ozn_pov_mp document, ob.e_mail email from povrat_mp o
     left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_mp
-    where o.vrs_knj = 2 and o.dat_pov_mp >=today-60 and o.storno = 'N' and o.status = 1
-    and o.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-60)
+    where o.vrs_knj in ('2','3') and o.dat_pov_mp >=today-100 and o.storno = 'N' and o.status = 1
+    and o.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-100)
     union all
     select "FranchiseToWarehouse" document_type,o.ozn_otp document, ob.napomena email from otprem o
     left join magacin ob on ob.sif_mag = o.sif_mag
-    where o.vrs_knj = 2 and o.dat_otp >=today-60 and o.storno = 'N' and o.status = 1
-    and o.ozn_otp not in (select ext_ozn_dok from povrat_kup where dat_pov >=today-60 and storno = 'N' and status =1)
+    where o.vrs_knj in ('2','3') and o.dat_otp >=today-100 and o.storno = 'N' and o.status = 1
+    and o.ozn_otp not in (select ext_ozn_dok from povrat_kup where dat_pov >=today-100 and storno = 'N' and status =1)
     ) as A where document = ? and document_type = ?
 """;
         JdbcTemplate jdbcTemplate = getJdbcTemplate(system);
@@ -90,7 +90,7 @@ select email from (
         helper.setFrom("server@bebakids.com");
         helper.setTo(toEmailObject);
         helper.setCc(ccEmail);
-        helper.setTo("marko.vesic@bebakids.com");
+        //helper.setTo("marko.vesic@bebakids.com");
         helper.setSubject("Razlika po prijemu robe | Dokument: " + documentNumber);
 
         // Compose HTML email body with items as a table and styled
@@ -110,6 +110,7 @@ select email from (
                 .append("<th style='padding: 8px; border: 1px solid #ddd; font-size: 14px;'>Velicina</th>")
                 .append("<th style='padding: 8px; border: 1px solid #ddd; font-size: 14px;'>Poslata kolicina</th>")
                 .append("<th style='padding: 8px; border: 1px solid #ddd; font-size: 14px;'>Skenirana kolicina</th>")
+                .append("<th style='padding: 8px; border: 1px solid #ddd; font-size: 14px;'>Razlika</th>")
                 .append("</tr>");
         emailBody.append("</thead>");
         emailBody.append("<tbody>");
@@ -122,6 +123,7 @@ select email from (
                     .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getSize()).append("</td>")
                     .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getInvoicedQty()).append("</td>")
                     .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getScannedQty()).append("</td>")
+                    .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getScannedQty()-item.getInvoicedQty()).append("</td>")
                     .append("</tr>");
         }
         emailBody.append("</tbody>");

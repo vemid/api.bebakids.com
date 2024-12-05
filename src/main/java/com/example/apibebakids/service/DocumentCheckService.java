@@ -51,32 +51,32 @@ public class DocumentCheckService {
             left join otprem_mp o1 on o1.ozn_otp_mal = o.ozn_otp_mal
             left join roba r on r.sif_rob = o.sif_rob
             left join ean_kod e on e.sif_rob = o.sif_rob and e.sif_ent_rob = o.sif_ent_rob
-            where o1.vrs_knj = 2 and o1.dat_otp_mal >=today-60 and o1.storno = 'N' and o1.status = 1
-            and o1.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-60)
+            where o1.vrs_knj in ('2','3') and o1.dat_otp_mal >=today-100 and o1.storno = 'N' and o1.status = 1
+            and o1.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-100)
             group by 1,2,3,4,5,6
             union all
             select "StoreToStore" document_type,o1.ozn_pre_mp document, e.bar_kod,r.naz_rob,o.sif_rob,o.sif_ent_rob,sum(o.kolic) kolic from pren_mp_st o
             left join pren_mp o1 on o1.ozn_pre_mp = o.ozn_pre_mp
         left join roba r on r.sif_rob = o.sif_rob
             left join ean_kod e on e.sif_rob = o.sif_rob and e.sif_ent_rob = o.sif_ent_rob
-            where o1.vrs_knj = 2 and o1.dat_knj >=today-60 and o1.storno = 'N' and o1.status = 1
-            and o1.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-60)
+            where o1.vrs_knj in ('2','3') and o1.dat_knj >=today-100 and o1.storno = 'N' and o1.status = 1
+            and o1.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-100)
             group by 1,2,3,4,5,6
             union all
             select "StoreToWarehouse" document_type,o1.ozn_pov_mp document, e.bar_kod,r.naz_rob,o.sif_rob,o.sif_ent_rob,sum(o.kolic) kolic from povrat_mp_st o
             left join povrat_mp o1 on o1.ozn_pov_mp = o.ozn_pov_mp
         left join roba r on r.sif_rob = o.sif_rob
             left join ean_kod e on e.sif_rob = o.sif_rob and e.sif_ent_rob = o.sif_ent_rob
-            where o1.vrs_knj = 2 and o1.dat_pov_mp >=today-60 and o1.storno = 'N' and o1.status = 1
-            and o1.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-60)
+            where o1.vrs_knj in ('2','3') and o1.dat_pov_mp >=today-100 and o1.storno = 'N' and o1.status = 1
+            and o1.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-100)
             group by 1,2,3,4,5,6
             union all
             select "FranchiseToWarehouse" document_type,o1.ozn_otp document, e.bar_kod,r.naz_rob,o.sif_rob,o.sif_ent_rob,sum(o.kolic) kolic from otprem_st o
             left join otprem o1 on o1.ozn_otp = o.ozn_otp
         left join roba r on r.sif_rob = o.sif_rob
             left join ean_kod e on e.sif_rob = o.sif_rob and e.sif_ent_rob = o.sif_ent_rob
-            where o1.vrs_knj = 2 and o1.dat_otp >=today-60 and o1.storno = 'N' and o1.status = 1
-            and o1.ozn_otp not in (select ext_ozn_dok from povrat_kup where dat_pov >=today-60 and storno = 'N' and status =1)
+            where o1.vrs_knj in ('2','3') and o1.dat_otp >=today-100 and o1.storno = 'N' and o1.status = 1
+            and o1.ozn_otp not in (select ext_ozn_dok from povrat_kup where dat_pov >=today-100 and storno = 'N' and status =1)
             group by 1,2,3,4,5,6) as A where document like ? and document_type like ?
         """;
 

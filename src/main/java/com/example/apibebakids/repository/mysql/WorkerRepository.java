@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
 import java.util.List;
 import com.example.apibebakids.model.mysql.ProductionWorker;
 import com.example.apibebakids.model.mysql.ProductionWorkerCheckin;
@@ -33,10 +35,27 @@ public class WorkerRepository {
 
     public void saveCheckin(ProductionWorkerCheckin checkin, Long workerID) {
 
-        jdbcTemplate.update(
-                "INSERT INTO production_worker_checkins (worker_id, date, check_in, check_out) VALUES (?, ?, ?, ?)",
-                workerID, checkin.getCheckinDate(), checkin.getCheckinTime(), checkin.getCheckinEndTime()
-        );
+        if (!checkForCheckIn(workerID, checkin.getCheckinDate())) {
+            jdbcTemplate.update(
+                    "INSERT INTO production_worker_checkins (worker_id, date, check_in, check_out) VALUES (?, ?, ?, ?)",
+                    workerID, checkin.getCheckinDate(), checkin.getCheckinTime(), checkin.getCheckinEndTime()
+            );
+        } else {
+            jdbcTemplate.update(
+                    "UPDATE production_worker_checkins SET check_out = ? WHERE date = ? AND worker_id = ?",
+                    checkin.getCheckinEndTime(), checkin.getCheckinDate(), workerID
+            );
+        }
+    }
+
+    public boolean checkForCheckIn(Long workerId, LocalDate checkinDate) {
+        String sql = "SELECT COUNT(*) FROM production_worker_checkins WHERE worker_id = ? AND date = ?";
+        try {
+            Integer count = jdbcTemplate.queryForObject(sql, new Object[]{workerId, checkinDate}, Integer.class);
+            return count != null && count > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public Long findWorkerIdByCode(String workerCode) {
