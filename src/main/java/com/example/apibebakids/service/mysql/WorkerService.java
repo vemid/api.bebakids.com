@@ -1,10 +1,11 @@
 package com.example.apibebakids.service.mysql;
 
+import com.example.apibebakids.model.mysql.ProductionWorker;
+import com.example.apibebakids.model.mysql.ProductionWorkerSyncCheckins;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import com.example.apibebakids.repository.mysql.WorkerRepository;
-import com.example.apibebakids.model.mysql.ProductionWorker;
 import com.example.apibebakids.model.mysql.ProductionWorkerCheckin;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,10 @@ public class WorkerService {
 
     public List<ProductionWorker> getAllWorkersByLocation(String locationId) {
         return workerRepository.findAllWorkers(locationId);
+    }
+
+    public List<ProductionWorkerSyncCheckins> getAllChekinsByLocations(String locationId) {
+        return workerRepository.findAllChekinsByLocations(locationId);
     }
 
 

@@ -10,6 +10,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 public class EmailService {
 
@@ -47,30 +49,70 @@ public class EmailService {
     // Method to retrieve toEmail based on system, documentNumber, and documentType
     public String getToEmail(String system, String documentNumber, String documentType) {
         String sql = """
-select email from (
-    select "WarehouseToStore" document_type, o.ozn_otp_mal document,ob.napomena email from otprem_mp o
-    left join magacin ob on ob.sif_mag = o.sif_mag
-    where o.vrs_knj in ('2','3') and o.dat_otp_mal >=today-100 and o.storno = 'N' and o.status = 1
-    and o.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-100)
-    union all
-    select "StoreToStore" document_type,o.ozn_pre_mp document, ob.e_mail email from pren_mp o
-    left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_izl
-    where o.vrs_knj in ('2','3') and o.dat_knj >=today-100 and o.storno = 'N' and o.status = 1
-    and o.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-100)
-    union all
-    select "StoreToWarehouse" document_type,o.ozn_pov_mp document, ob.e_mail email from povrat_mp o
-    left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_mp
-    where o.vrs_knj in ('2','3') and o.dat_pov_mp >=today-100 and o.storno = 'N' and o.status = 1
-    and o.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-100)
-    union all
-    select "FranchiseToWarehouse" document_type,o.ozn_otp document, ob.napomena email from otprem o
-    left join magacin ob on ob.sif_mag = o.sif_mag
-    where o.vrs_knj in ('2','3') and o.dat_otp >=today-100 and o.storno = 'N' and o.status = 1
-    and o.ozn_otp not in (select ext_ozn_dok from povrat_kup where dat_pov >=today-100 and storno = 'N' and status =1)
-    ) as A where document = ? and document_type = ?
-""";
-        JdbcTemplate jdbcTemplate = getJdbcTemplate(system);
-        return jdbcTemplate.queryForObject(sql, new Object[]{documentNumber, documentType}, String.class);
+                """;
+
+        if (Objects.equals(documentType, "WarehouseToStore")) {
+            sql = """
+                    select /*"WarehouseToStore" document_type, o.ozn_otp_mal document,*/
+                    ob.napomena email from otprem_mp o
+                    left join magacin ob on ob.sif_mag = o.sif_mag
+                    where o.vrs_knj in ('2','3') and o.dat_otp_mal >=today-100 and o.storno = 'N' and o.status = 1
+                    and o.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-100)
+                    and o.ozn_otp_mal=?
+                    """;
+        } else if (Objects.equals(documentType, "StoreToStore")) {
+            sql = """
+                    select /*"StoreToStore" document_type,o.ozn_pre_mp document, */
+                    ob.e_mail email from pren_mp o
+                    left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_izl
+                    where o.vrs_knj in ('2','3') and o.dat_knj >=today-100 and o.storno = 'N' and o.status = 1
+                    and o.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-100)
+                    and o.ozn_pre_mp = ?
+                    """;
+        } else if (Objects.equals(documentType, "StoreToWarehouse")) {
+            sql = """
+                    select /*"StoreToWarehouse" document_type,o.ozn_pov_mp document, */
+                    ob.e_mail email from povrat_mp o
+                    left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_mp
+                    where o.vrs_knj in ('2','3') and o.dat_pov_mp >=today-100 and o.storno = 'N' and o.status = 1
+                    and o.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-100)
+                    and o.ozn_pov_mp = ?
+                    """;
+        } else if (Objects.equals(documentType, "FranchiseToWarehouse")) {
+            sql = """
+                    select /*"FranchiseToWarehouse" document_type,o.ozn_otp document, */
+                    ob.napomena email from otprem o
+                    left join magacin ob on ob.sif_mag = o.sif_mag
+                    where o.vrs_knj in ('1') and o.dat_otp >=today-100 and o.storno = 'N' and o.status = 1
+                    and o.ozn_otp not in (select nvl(ext_ozn_dok,"00000") ozn_otp from povrat_kup where dat_pov >=today-100 and storno = 'N' and status =1)
+                    and o.ozn_otp = ?
+                    """;
+        } else if (Objects.equals(documentType, "ProductionToStore")) {
+            sql = """
+                    select /*"ProductionToStore" document_type, o.ozn_nal_izp document,*/
+                    ob.e_mail email from nal_izdp o
+                    left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_mp
+                    where o.vrs_knj in ('2','3') and o.dat_nal_izp >=today-100 and o.storno = 'N'
+                    and o.ozn_nal_izp = ?
+                    """;
+        } else if (Objects.equals(documentType, "ProductionToWarehouse")) {
+            sql = """
+                    select /*"ProductionToWarehouse" document_type, o.ozn_nal_pre document,*/
+                    ob.napomena email from nal_pre o
+                    left join magacin ob on ob.sif_mag = o.sif_mag_iz
+                    where o.vrs_knj in ('2','3') and o.dat_nal_pre >=today-100 and o.storno = 'N'
+                    and o.ozn_nal_pre = ?
+                    """;
+        }
+
+        try {
+            JdbcTemplate jdbcTemplate = getJdbcTemplate(system);
+            return jdbcTemplate.queryForObject(sql, new Object[]{documentNumber}, String.class);
+        }
+
+        catch (Exception e) {
+            return "server@bebakids.com";
+        }
     }
 
     // Method to send the email, now using EmailRequestDTO
@@ -79,7 +121,7 @@ select email from (
         String system = emailRequestDTO.getSystem();
         String documentNumber = emailRequestDTO.getDocumentNumber();
         String documentType = emailRequestDTO.getDocumentType();
-        String ccEmail =emailRequestDTO.getFromEmail();
+        String ccEmail = emailRequestDTO.getFromEmail();
 
         // Retrieve the toEmail address using system, documentNumber, and documentType
         String toEmailObject = getToEmail(system, documentNumber, documentType);
@@ -123,7 +165,7 @@ select email from (
                     .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getSize()).append("</td>")
                     .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getInvoicedQty()).append("</td>")
                     .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getScannedQty()).append("</td>")
-                    .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getScannedQty()-item.getInvoicedQty()).append("</td>")
+                    .append("<td style='padding: 8px; border: 1px solid #ddd; font-size: 13px;'>").append(item.getScannedQty() - item.getInvoicedQty()).append("</td>")
                     .append("</tr>");
         }
         emailBody.append("</tbody>");

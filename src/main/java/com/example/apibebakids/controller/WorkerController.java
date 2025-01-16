@@ -3,6 +3,7 @@ package com.example.apibebakids.controller;
 import com.example.apibebakids.model.mysql.ProductionWorker;
 import com.example.apibebakids.model.mysql.LocalApiResponse;
 import com.example.apibebakids.model.mysql.ProductionWorkerCheckin;
+import com.example.apibebakids.model.mysql.ProductionWorkerSyncCheckins;
 import com.example.apibebakids.service.mysql.WorkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -60,6 +61,7 @@ public class WorkerController {
             @ApiResponse(responseCode = "500", description = "An unexpected error occurred", content = @Content)
     })
 
+
     @PostMapping("/saveWorkersCheckinsByLocation")
     public ResponseEntity<LocalApiResponse<String>> recordWorkerCheckins(@RequestBody CheckinRequest checkinRequest) {
         try {
@@ -71,6 +73,30 @@ public class WorkerController {
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
             LocalApiResponse<String> response = new LocalApiResponse<>(false, "An unexpected error occurred", null, Collections.singletonList(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+
+    @Operation(summary = "Get all today's checkins by location", description = "Retrieves a list of all workers which are checked-in on today based on location.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid or missing location ID", content = @Content),
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred", content = @Content)
+    })
+    @GetMapping("/getCheckinsByLocation")
+    public ResponseEntity<LocalApiResponse<List<ProductionWorkerSyncCheckins>>> getAllChekinsByLocations(
+            @Parameter(description = "ID of the location to filter workers by", required = true)
+            @RequestParam("locationId") String locationId) {
+        try {
+            List<ProductionWorkerSyncCheckins> allWorkersSyncByLocation = workerService.getAllChekinsByLocations(locationId);
+            LocalApiResponse<List<ProductionWorkerSyncCheckins>> response = new LocalApiResponse<>(true, "Successfully retrieved list", allWorkersSyncByLocation, null);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            LocalApiResponse<List<ProductionWorkerSyncCheckins>> response = new LocalApiResponse<>(false, "Invalid location ID: " + locationId, null, Collections.singletonList(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        } catch (Exception e) {
+            LocalApiResponse<List<ProductionWorkerSyncCheckins>> response = new LocalApiResponse<>(false, "An unexpected error occurred", null, Collections.singletonList(e.getMessage()));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

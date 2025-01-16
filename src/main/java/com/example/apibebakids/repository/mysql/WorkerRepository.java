@@ -1,5 +1,6 @@
 package com.example.apibebakids.repository.mysql;
 
+import com.example.apibebakids.model.mysql.ProductionWorkerSyncCheckins;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,6 +34,22 @@ public class WorkerRepository {
         );
     }
 
+    public List<ProductionWorkerSyncCheckins> findAllChekinsByLocations(String locationId) {
+        String sql = "select p.id,p.checkin_code,concat(p.name,\" \",p.last_name) worker_name,pw.date,pw.check_in,pw.check_out from production_worker_checkins pw left join production_workers p on p.id = pw.worker_id where date >= date(now())-1 and p.location_code_id = ?";
+        return jdbcTemplate.query(
+                sql,
+                new Object[] { locationId },
+                (rs, rowNum) -> new ProductionWorkerSyncCheckins(
+                        rs.getLong("id"),
+                        rs.getString("checkin_code"),
+                        rs.getString("worker_name"),
+                        rs.getDate("date").toLocalDate(),
+                        rs.getTime("check_in").toLocalTime(),
+                        rs.getTime("check_out") != null ? rs.getTime("check_out").toLocalTime() : null
+                )
+        );
+    }
+
     public void saveCheckin(ProductionWorkerCheckin checkin, Long workerID) {
 
         if (!checkForCheckIn(workerID, checkin.getCheckinDate())) {
@@ -41,10 +58,12 @@ public class WorkerRepository {
                     workerID, checkin.getCheckinDate(), checkin.getCheckinTime(), checkin.getCheckinEndTime()
             );
         } else {
-            jdbcTemplate.update(
-                    "UPDATE production_worker_checkins SET check_out = ? WHERE date = ? AND worker_id = ?",
-                    checkin.getCheckinEndTime(), checkin.getCheckinDate(), workerID
-            );
+            if (checkin.getCheckinEndTime() != null) {
+                jdbcTemplate.update(
+                        "UPDATE production_worker_checkins SET check_out = ? WHERE date = ? AND worker_id = ?",
+                        checkin.getCheckinEndTime(), checkin.getCheckinDate(), workerID
+                );
+            }
         }
     }
 
