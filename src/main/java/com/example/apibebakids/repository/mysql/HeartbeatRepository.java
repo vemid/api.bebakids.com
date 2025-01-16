@@ -8,6 +8,8 @@ import com.example.apibebakids.model.mysql.DeviceHeartbeat;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @Repository
 public class HeartbeatRepository {
@@ -16,6 +18,14 @@ public class HeartbeatRepository {
     @Autowired
     public HeartbeatRepository(@Qualifier("jdbcTemplateMysql") JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public List<Map<String, Object>> getDevices(String station) {
+        String sql = "SELECT id, device_id, shop_name, active, station, ip " +
+                "FROM radio_bebakids.devices " +
+                "WHERE station = ? and active = 1 " +
+                "ORDER BY id";
+        return jdbcTemplate.queryForList(sql, station);
     }
 
     public boolean existsHeartbeatForToday(String deviceId) {
