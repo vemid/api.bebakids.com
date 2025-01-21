@@ -148,54 +148,69 @@ public class StockService {
         StringBuilder sql = new StringBuilder();
         if (Objects.equals(storeId, "MAG")) {
             sql = new StringBuilder("""
-                        select 
-                            trim(z.sif_rob) sku,
-                            trim(r.naz_rob) name,
-                            trim(e.bar_kod) barcode,
-                            trim(z.sif_ent_rob) size,
-                            sum(z.kolic-z.rez_kol) qty
-                        from zal_robe_mag_zon z
-                            left join ean_kod e on e.sif_rob = z.sif_rob and e.sif_ent_rob = z.sif_ent_rob
-                            left join roba r on r.sif_rob = z.sif_Rob
-                            where (z.sif_mag in ('MP','MR') or z.sif_mag= ? )
-                            group by 1,2,3,4 having sum(z.kolic-z.rez_kol) > 0
-                    """);
-
-            //sql.append(" order by z.sif_ent_rob, z.sif_mag");
+                    select trim(A.sif_rob) sku,trim(r.naz_rob) name,trim(e.bar_kod) barcode,trim(A.sif_ent_rob) size,sum(A.kolic) qty from (
+                        select sif_rob,sif_ent_rob,sum(kolic-rez_kol) kolic from zal_robe_mag_zon z
+                        where (z.sif_mag in ('MP','MR') or z.sif_mag= ? )
+                        group by 1,2
+                        having sum(z.kolic-z.rez_kol) > 0
+                        union all
+                        select os.sif_rob,os.sif_ent_rob,sum(os.kolic)*-1 kolic from otprem_mp_st os
+                        left join otprem_mp o on o.ozn_otp_mal = os.ozn_otp_mal
+                        where o.storno = 'N' and o.status = 0 and o.vrs_knj in ('2','3') 
+                        and o.dat_otp_mal>=cast("01.01."||year(today) as date) and o.dat_otp_mal>=today-30 and o.sif_mag in ('MP','MR') group by 1,2) as A
+                        left join roba r on r.sif_rob = A.sif_rob
+                        left join ean_kod e on e.sif_rob = A.sif_rob and e.sif_ent_rob = A.sif_ent_rob
+                        group by 1,2,3,4
+                """);
         } else {
             sql = new StringBuilder("""
-                        select 
-                            trim(z.sif_rob) sku,
-                            trim(r.naz_rob) name,
-                            trim(e.bar_kod) barcode, 
-                            trim(z.sif_ent_rob) size,
-                            round(z.kolic-z.rez_kol, 0) qty
-                        from 
-                            zal_robe_mp_zon z
-                            left join ean_kod e on e.sif_rob = z.sif_rob and e.sif_ent_rob = z.sif_ent_rob
-                            left join roba r on r.sif_rob = z.sif_Rob
-                        where z.kolic-z.rez_kol > 0 
-                            and z.sif_obj_mp = ? 
-                    """);
-
-            sql.append(" order by z.sif_ent_rob, z.sif_obj_mp");
+                    select trim(A.sif_rob) sku,trim(r.naz_rob) name,trim(e.bar_kod) barcode,trim(A.sif_ent_rob) size,sum(A.kolic) qty from (
+                    select sif_rob,sif_ent_rob,kolic-rez_kol kolic from zal_robe_mp_zon where kolic-rez_kol>0 and sif_obj_mp = ?
+                    union all
+                    select ns.sif_rob,ns.sif_ent_rob,sum(ns.kolic)*-1 kolic from nal_povrat_mp_st ns
+                    left join nal_povrat_mp n on n.ozn_nal_pov_mp = ns.ozn_nal_pov_mp 
+                    left join povrat_mp p on p.sif_obj_mp = n.sif_obj_mp and p.ozn_nal_pov_mp = n.ozn_nal_pov_mp
+                    where n.storno='N' and p.ozn_nal_pov_mp is null
+                    and dat_nal_pov_mp>=cast("01.01."||year(today) as date) and dat_nal_pov_mp>=today-30 and n.sif_obj_mp = ? group by 1,2 
+                    union all 
+                    SELECT ps.sif_rob,ps.sif_ent_rob,sum(ps.kolic)*-1 kolic  from pren_mp_st ps
+                    left join pren_mp p on p.ozn_pre_mp = ps.ozn_pre_mp and p.storno = 'N' and p.status =0
+                    where
+                    p.dat_knj>=cast("01.01."||year(today) as date) and p.dat_knj>=today-30 and p.sif_obj_izl = ? group by 1,2
+                    ) as A 
+                    left join roba r on r.sif_rob = A.sif_rob
+                    left join ean_kod e on e.sif_rob = A.sif_rob and e.sif_ent_rob = A.sif_ent_rob
+                    group by 1,2,3,4
+                """);
         }
 
         try {
             // Get the correct JdbcTemplate based on the system
             JdbcTemplate jdbcTemplate = getJdbcTemplate(system);
 
-
-            List<StockResponse.StockItem> stockItems = jdbcTemplate.query(sql.toString(), new Object[]{storeId}, (rs, rowNum) -> {
-                StockResponse.StockItem item = new StockResponse.StockItem();
-                item.setSku(rs.getString("sku"));
-                item.setName(rs.getString("name"));
-                item.setBarcode(rs.getString("barcode"));
-                item.setSize(rs.getString("size"));
-                item.setQty(rs.getInt("qty"));
-                //item.setPrice(rs.getDouble("price"));
-                return item;
-            });
+            List<StockResponse.StockItem> stockItems;
+            if (Objects.equals(storeId, "MAG")) {
+                stockItems = jdbcTemplate.query(sql.toString(), new Object[]{storeId}, (rs, rowNum) -> {
+                    StockResponse.StockItem item = new StockResponse.StockItem();
+                    item.setSku(rs.getString("sku"));
+                    item.setName(rs.getString("name"));
+                    item.setBarcode(rs.getString("barcode"));
+                    item.setSize(rs.getString("size"));
+                    item.setQty(rs.getInt("qty"));
+                    return item;
+                });
+            } else {
+                // For the new query with three parameters, pass storeId three times
+                stockItems = jdbcTemplate.query(sql.toString(), new Object[]{storeId, storeId, storeId}, (rs, rowNum) -> {
+                    StockResponse.StockItem item = new StockResponse.StockItem();
+                    item.setSku(rs.getString("sku"));
+                    item.setName(rs.getString("name"));
+                    item.setBarcode(rs.getString("barcode"));
+                    item.setSize(rs.getString("size"));
+                    item.setQty(rs.getInt("qty"));
+                    return item;
+                });
+            }
 
             StockResponse response = new StockResponse();
             response.setResponseResult(!stockItems.isEmpty());
