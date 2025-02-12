@@ -46,6 +46,7 @@ public class WarehouseService {
     private boolean isValidSystem(String system) {
         return "bebakids".equalsIgnoreCase(system) ||
                 "watch".equalsIgnoreCase(system) ||
+                "bebakidsbih".equalsIgnoreCase(system) ||
                 "geox".equalsIgnoreCase(system);
     }
 

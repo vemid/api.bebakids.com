@@ -58,7 +58,6 @@ select "WarehouseToStore" document_type,o1.ozn_otp_mal document, e.bar_kod,r.naz
             left join roba r on r.sif_rob = o.sif_rob
             left join ean_kod e on e.sif_rob = o.sif_rob and e.sif_ent_rob = o.sif_ent_rob
             where o1.vrs_knj in ('2','3') and o1.dat_otp_mal >=today-100 and o1.storno = 'N' and o1.status = 1
-            and o1.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-100)
             and o1.ozn_otp_mal like ?
             group by 1,2,3,4,5,6
 """;
@@ -69,7 +68,6 @@ select "StoreToStore" document_type,o1.ozn_pre_mp document, e.bar_kod,r.naz_rob,
         left join roba r on r.sif_rob = o.sif_rob
             left join ean_kod e on e.sif_rob = o.sif_rob and e.sif_ent_rob = o.sif_ent_rob
             where o1.vrs_knj in ('2','3') and o1.dat_knj >=today-100 and o1.storno = 'N' and o1.status = 1
-            and o1.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-100)
             and o1.ozn_pre_mp like ?
             group by 1,2,3,4,5,6
 """;
@@ -81,7 +79,6 @@ select "StoreToWarehouse" document_type,o1.ozn_pov_mp document, e.bar_kod,r.naz_
         left join roba r on r.sif_rob = o.sif_rob
             left join ean_kod e on e.sif_rob = o.sif_rob and e.sif_ent_rob = o.sif_ent_rob
             where o1.vrs_knj in ('2','3') and o1.dat_pov_mp >=today-100 and o1.storno = 'N' and o1.status = 1
-            and o1.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-100)
             and o1.ozn_pov_mp like ?
             group by 1,2,3,4,5,6
 """;

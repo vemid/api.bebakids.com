@@ -57,7 +57,6 @@ public class EmailService {
                     ob.napomena email from otprem_mp o
                     left join magacin ob on ob.sif_mag = o.sif_mag
                     where o.vrs_knj in ('2','3') and o.dat_otp_mal >=today-100 and o.storno = 'N' and o.status = 1
-                    and o.ozn_otp_mal not in (select ozn_otp_izl from otprem_mp where vrs_knj = 1 and dat_otp_mal >=today-100)
                     and o.ozn_otp_mal=?
                     """;
         } else if (Objects.equals(documentType, "StoreToStore")) {
@@ -66,7 +65,6 @@ public class EmailService {
                     ob.e_mail email from pren_mp o
                     left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_izl
                     where o.vrs_knj in ('2','3') and o.dat_knj >=today-100 and o.storno = 'N' and o.status = 1
-                    and o.ozn_pre_mp not in (select ozn_pre_mp_izl from pren_mp where vrs_knj = 1 and dat_knj >=today-100)
                     and o.ozn_pre_mp = ?
                     """;
         } else if (Objects.equals(documentType, "StoreToWarehouse")) {
@@ -75,7 +73,6 @@ public class EmailService {
                     ob.e_mail email from povrat_mp o
                     left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_mp
                     where o.vrs_knj in ('2','3') and o.dat_pov_mp >=today-100 and o.storno = 'N' and o.status = 1
-                    and o.ozn_pov_mp not in (select ozn_pov_mp_izl from povrat_mp where vrs_knj = 1 and dat_pov_mp >=today-100)
                     and o.ozn_pov_mp = ?
                     """;
         } else if (Objects.equals(documentType, "FranchiseToWarehouse")) {
@@ -90,7 +87,7 @@ public class EmailService {
         } else if (Objects.equals(documentType, "ProductionToStore")) {
             sql = """
                     select /*"ProductionToStore" document_type, o.ozn_nal_izp document,*/
-                    ob.e_mail email from nal_izdp o
+                    "knjazevac@bebakids.com" email from nal_izdp o
                     left join obj_mp ob on ob.sif_obj_mp = o.sif_obj_mp
                     where o.vrs_knj in ('2','3') and o.dat_nal_izp >=today-100 and o.storno = 'N'
                     and o.ozn_nal_izp = ?
@@ -98,7 +95,7 @@ public class EmailService {
         } else if (Objects.equals(documentType, "ProductionToWarehouse")) {
             sql = """
                     select /*"ProductionToWarehouse" document_type, o.ozn_nal_pre document,*/
-                    ob.napomena email from nal_pre o
+                    "knjazevac@bebakids.com" email from nal_pre o
                     left join magacin ob on ob.sif_mag = o.sif_mag_iz
                     where o.vrs_knj in ('2','3') and o.dat_nal_pre >=today-100 and o.storno = 'N'
                     and o.ozn_nal_pre = ?
@@ -111,7 +108,7 @@ public class EmailService {
         }
 
         catch (Exception e) {
-            return "server@bebakids.com";
+            return "online@bebakids.com";
         }
     }
 
@@ -129,7 +126,7 @@ public class EmailService {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-        helper.setFrom("server@bebakids.com");
+        helper.setFrom("online@bebakids.com");
         helper.setTo(toEmailObject);
         helper.setCc(ccEmail);
         //helper.setTo("marko.vesic@bebakids.com");
