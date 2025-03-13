@@ -78,11 +78,11 @@
             <artifactId>json</artifactId>
             <version>20210307</version>
         </dependency>
-<!--        <dependency>
+        <dependency>
             <groupId>com.sybase</groupId>
             <artifactId>jconn4</artifactId>
             <version>7.0</version>
-        </dependency>-->
+        </dependency>
     </dependencies>
 
     <build>
