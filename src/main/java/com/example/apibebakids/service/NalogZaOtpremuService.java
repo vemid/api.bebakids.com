@@ -1,6 +1,7 @@
 package com.example.apibebakids.service;
 
 import com.example.apibebakids.model.NalogZaOtpremu;
+import com.example.apibebakids.model.PriceInfoDTO;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -128,7 +129,7 @@ public class NalogZaOtpremuService {
 
         for (NalogZaOtpremu.Stavka stavka : nalogZaOtpremu.getStavke()) {
 
-            double[] prices = priceCheckService.checkPrices(system, warehouse, stavka.getSifraRobe(), pricelist);
+            PriceInfoDTO priceInfo = priceCheckService.checkPrices(system, warehouse, stavka.getSifraRobe(), pricelist);
 
             stavkeXml.append(String.format(
                     "<stavke>" +
@@ -153,11 +154,11 @@ public class NalogZaOtpremuService {
                             "<stopaRabata>0</stopaRabata>" +
                             "<zahtevanaKolicina>%.2f</zahtevanaKolicina>" +
                             "</stavke>",
-                    prices[3],          // cenaSaRabatom
-                    prices[3],          // deviznaCena
+                    priceInfo.getVp(),             // cenaSaRabatom (prices[3] je bio vp)
+                    priceInfo.getVp(),             // deviznaCena
                     stavka.getKolicina(),
-                    prices[3],          // osnovnaCena
-                    prices[1],          // prodajnaCena (same as osnovnaCena here)
+                    priceInfo.getVp(),             // osnovnaCena
+                    priceInfo.getMpBezPdv(),       // prices[1]        // prodajnaCena (same as osnovnaCena here)
                     stavka.getSifraObelezja(),
                     stavka.getSifraRobe(),
                     stavka.getKolicina()

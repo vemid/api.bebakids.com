@@ -56,7 +56,7 @@ public class StockService {
                         trim(e.bar_kod) barcode,
                         trim(z.sif_ent_rob) size,
                         round(z.kolic-z.rez_kol, 0) qty,
-                        trim(zm.sif_mag) warehouse, zm.cen_zal price
+                        trim(zm.sif_mag) warehouse, zm.cen_pro price
                         from
                         zal_robe_mag_zon z
                         left join ean_kod e on e.sif_rob = z.sif_rob and e.sif_ent_rob = z.sif_ent_rob

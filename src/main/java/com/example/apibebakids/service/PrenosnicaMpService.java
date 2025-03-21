@@ -4,6 +4,7 @@ import com.example.apibebakids.model.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +22,41 @@ import java.util.List;
 public class PrenosnicaMpService {
 
     @Autowired
-    private DataSource dataSource;
+    @Qualifier("dataSourceBebaKids")
+    private DataSource dataSourceBebaKids;
 
     @Autowired
-    private PrenosnicaUtils prenosnicaUtils;
+    @Qualifier("dataSourceWatch")
+    private DataSource dataSourceWatch;
+
+    @Autowired
+    @Qualifier("dataSourceGeox")
+    private DataSource dataSourceGeox;
+
+    @Autowired
+    @Qualifier("dataSourceBebaKidsBih")
+    private DataSource dataSourceBebaKidsBih;
+
+    @Autowired
+    private DocumentUtils documentUtils;
+
+    /**
+     * Vraća odgovarajući DataSource na osnovu naziva sistema
+     */
+    private DataSource getDataSourceForSystem(String system) {
+        switch (system.toLowerCase()) {
+            case "bebakids":
+                return dataSourceBebaKids;
+            case "watch":
+                return dataSourceWatch;
+            case "geox":
+                return dataSourceGeox;
+            case "bebakidsbih":
+                return dataSourceBebaKidsBih;
+            default:
+                throw new IllegalArgumentException("Nepoznat sistem: " + system);
+        }
+    }
 
     /**
      * Dodaje prenosnicu maloprodaje
@@ -61,7 +93,7 @@ public class PrenosnicaMpService {
             }
 
             // Generisanje oznake dokumenta
-            String oznakaDokumenta = prenosnicaUtils.generateDocumentNumber("P9", system, objekatIzlaza, "");
+            String oznakaDokumenta = documentUtils.generateDocumentNumber("P9", system, objekatIzlaza, "");
 
             // Kreiraj PrenosnicaMpDTO objekat
             PrenosnicaMpDTO prenosnica = new PrenosnicaMpDTO();
@@ -135,6 +167,8 @@ public class PrenosnicaMpService {
             prenosnica.setStavke(stavke);
 
             // Sačuvaj u bazu
+            // Dobavi DataSource za odgovarajući sistem
+            DataSource dataSource = getDataSourceForSystem(system);
             conn = dataSource.getConnection();
 
             // Provera da li dokument već postoji
@@ -194,6 +228,8 @@ public class PrenosnicaMpService {
         ResultSet rsStavke = null;
 
         try {
+            // Dobavi DataSource za odgovarajući sistem
+            DataSource dataSource = getDataSourceForSystem(system);
             conn = dataSource.getConnection();
 
             // Parse datuma ako su prosleđeni
@@ -632,18 +668,18 @@ public class PrenosnicaMpService {
 
         try {
             stm = conn.prepareStatement(
-                    "SELECT sif_rob, pro_nab_cen, pro_vp_cen, vel_cen, mal_cen, mal_cen_bp " +
-                            "FROM zal_obj_mp WHERE sif_rob = ? AND sif_obj_mp = ?");
+                    "SELECT sif_rob, nab_cen,pro_cen_bp,pro_cen " +
+                            "FROM zal_robe_mp WHERE sif_rob = ? AND sif_obj_mp = ?");
             stm.setString(1, sifraRobe);
             stm.setString(2, objekatMaloprodaje);
             rs = stm.executeQuery();
 
             if (rs.next()) {
                 zalihe.setSifraRobe(rs.getString("sif_rob"));
-                zalihe.setProsecnaNabavnaCena(rs.getBigDecimal("pro_nab_cen"));
-                zalihe.setVeleprodajnaCena(rs.getBigDecimal("vel_cen"));
-                zalihe.setMaloprodajnaCena(rs.getBigDecimal("mal_cen"));
-                zalihe.setMaloprodajnaCenaBezPoreza(rs.getBigDecimal("mal_cen_bp"));
+                zalihe.setProsecnaNabavnaCena(rs.getBigDecimal("nab_cen"));
+//                zalihe.setVeleprodajnaCena(rs.getBigDecimal("vel_cen"));
+                zalihe.setMaloprodajnaCena(rs.getBigDecimal("pro_cen"));
+                zalihe.setMaloprodajnaCenaBezPoreza(rs.getBigDecimal("pro_cen_bp"));
             }
 
             return zalihe;

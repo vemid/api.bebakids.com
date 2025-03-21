@@ -29,6 +29,7 @@ public class MisDocumentsController {
     @Autowired
     private PovratnicaMaloprodajeService povratnicaMaloprodajeService;
 
+
     @Autowired
     private NalogZaOtpremuService nalogZaOtpremuService;
 
@@ -43,6 +44,9 @@ public class MisDocumentsController {
 
     @Value("${soap.service.urlBKBIH}")
     private String soapServiceUrlBKBIH;
+
+    @Value("${soap.service.urlBKMNE}")
+    private String soapServiceUrlBKMNE;
 
     @Value("${soap.service.username}")
     private String username;
@@ -60,6 +64,8 @@ public class MisDocumentsController {
                 return soapServiceUrlCF;
             case "bebakidsbih":
                 return soapServiceUrlBKBIH;
+            case "bebakidsmne":
+                return soapServiceUrlBKMNE;
             default:
                 throw new IllegalArgumentException("Invalid system: " + system);
         }
