@@ -115,7 +115,7 @@ public class OtpremnicaMpService {
             otpremnica.setLogname(logname);
             otpremnica.setNapomena(napomena);
             otpremnica.setOznakaCenovnika(oznakaCenovnika);
-            otpremnica.setVrstaKnjizenja("3"); // Default UlazIzlaz
+            otpremnica.setVrstaKnjizenja("2"); // Default UlazIzlaz
             otpremnica.setSystem(system);
 
             // Generisanje oznake dokumenta
@@ -259,7 +259,7 @@ public class OtpremnicaMpService {
             // Postavi cene na osnovu rezultata
             stavka.setCenaZalihe(BigDecimal.valueOf(prices.getCenZal()));
             stavka.setProdajnaCenaBezPoreza(BigDecimal.valueOf(prices.getMpBezPdv()));
-            stavka.setOsnovnaCena(BigDecimal.valueOf(prices.getMpSaPdv()));
+            stavka.setOsnovnaCena(BigDecimal.valueOf(prices.getCenZal()));
             stavka.setProdajnaCena(BigDecimal.valueOf(prices.getMpSaPdv()));
             stavka.setProdajnaCenaSaRabatom(BigDecimal.valueOf(prices.getMpSaPdv()));
             stavka.setSifraTarifneGrupePoreza(String.valueOf((int)prices.getTarifnaGrupa()));

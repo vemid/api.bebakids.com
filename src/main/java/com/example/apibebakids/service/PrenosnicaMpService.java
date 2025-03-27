@@ -415,7 +415,7 @@ public class PrenosnicaMpService {
             // Insert stavke
             stmInsertStavke = conn.prepareStatement(
                     "INSERT INTO pren_mp_st (ozn_pre_mp, rbr, sif_rob, kolic, nab_cen, pro_cen_bp, pro_cen, " +
-                            "zbi_sto_pp, bar_kod, sif_ent_rob, bro_pak) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            "zbi_sto_pp, bar_kod, sif_ent_rob, bro_pak,pro_cen_u,nov_nab_cen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)");
 
             int rbr = 1;
             for (PrenosnicaMpDTO.Stavka stavka : prenosnica.getStavke()) {
@@ -455,6 +455,9 @@ public class PrenosnicaMpService {
                 stmInsertStavke.setString(9, stavka.getBarkod());
                 stmInsertStavke.setString(10, stavka.getSifraObelezja());
                 stmInsertStavke.setBigDecimal(11, stavka.getBrojPakovanja() != null ?
+                        stavka.getBrojPakovanja() : BigDecimal.ZERO);
+                stmInsertStavke.setBigDecimal(12, prodajnaCena);
+                stmInsertStavke.setBigDecimal(13, stavka.getBrojPakovanja() != null ?
                         stavka.getBrojPakovanja() : BigDecimal.ZERO);
 
                 stmInsertStavke.executeUpdate();

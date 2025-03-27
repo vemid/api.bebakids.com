@@ -62,14 +62,16 @@ public class WarehouseService {
 
         String sql = """
                     select "MP" type,trim(upper(o.sif_obj_mp)) code, trim(upper(o.naz_obj_mp)) name, o.e_mail,
-                    case when left(o.sif_org_jed,2) = '01' then "BK" when left(o.sif_org_jed,2) in ('03','62') then "CG" else "FR" end as retail_type, nvl(c.ozn_cen,"01/140000001") pricelist,
-                    case when o.vrs_obj = 1 then 1 else 0 end as active from obj_mp o
-                    left join proiz_cen_obj_mp c on c.sif_obj_mp = o.sif_obj_mp where left(sif_org_jed,2) not in ('03','64','62')
-                    union all
-                    select "WH" type, trim(sif_mag) code,trim(upper(naz_mag)) name,trim(nvl(napomena,"magacin@bebakids.com")) e_mail,
-                    case when left(sif_org_jed,2) = '01' then "BK" when left(sif_org_jed,2) in ('03','62') then "CG" else "FR" end as retail_type, "01/140000001" pricelist,1 active
-                    from magacin where left(sif_org_jed,2) in ('01') and sif_mag not in ('MM','MT','RX','DF')
-                    order by code
+                                        case when left(o.sif_org_jed,2) = '01' then "BK" when left(o.sif_org_jed,2) in ('03','62') then "CG" else "FR" end as retail_type, nvl(c.ozn_cen,"01/140000001") pricelist,
+                                        case when o.vrs_obj = 1 then 1 else 0 end as active from obj_mp o
+                                        left join proiz_cen_obj_mp c on c.sif_obj_mp = o.sif_obj_mp where left(sif_org_jed,2) not in ('03','64','62')
+                                        union all
+                                        select "WH" type, trim(m.sif_mag) code,trim(upper(naz_mag)) name,trim(nvl(napomena,"magacin@bebakids.com")) e_mail,
+                                        case when left(sif_org_jed,2) = '01' then "BK" when left(sif_org_jed,2) in ('03','62') then "CG" else "FR" end as retail_type, c.ozn_cen pricelist,1 active
+                                        from magacin m\s
+                                        left join proiz_cen_mag c on c.sif_mag = m.sif_mag
+                                        where left(sif_org_jed,2) in ('01') and m.sif_mag not in ('MM','MT','RX','DF')
+                                        order by code
                 """;
 
         try {

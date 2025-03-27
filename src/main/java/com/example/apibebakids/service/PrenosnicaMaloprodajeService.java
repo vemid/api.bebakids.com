@@ -22,11 +22,14 @@ public class PrenosnicaMaloprodajeService {
     @Autowired
     private PrenosnicaMpService prenosnicaMpService;
 
+    @Autowired
+    private DocumentUtils documentUtils;
+
     /**
      * Procesira zahtev za kreiranje prenosnice maloprodaje u starom formatu
      * i prosleđuje ga novoj implementaciji.
      */
-    public ResponseEntity<?> processPrenosnicaMaloprodaje(
+    public ResponseEntity<String> processPrenosnicaMaloprodaje(
             String storeFrom, String storeTo, String system, String items,
             String pricelist, String logname, String username, String password, String url) {
 
@@ -44,29 +47,50 @@ public class PrenosnicaMaloprodajeService {
                 newItem.put("sifraObelezja", oldItem.getString("size"));
                 newItem.put("kolicina", oldItem.getString("qty"));
 
-                // Ako postoje dodatna polja, možemo ih dodati
+                // Opciona polja
                 if (oldItem.has("stopaPoreza")) {
                     newItem.put("stopaPoreza", oldItem.getString("stopaPoreza"));
+                }
+
+                if (oldItem.has("zoneMagacina")) {
+                    newItem.put("zoneMagacina", oldItem.getString("zoneMagacina"));
+                }
+
+                if (oldItem.has("sifraPakovanja")) {
+                    newItem.put("sifraPakovanja", oldItem.getString("sifraPakovanja"));
+                }
+
+                if (oldItem.has("brojPakovanja")) {
+                    newItem.put("brojPakovanja", oldItem.getString("brojPakovanja"));
                 }
 
                 newItems.put(newItem);
             }
 
-            // Podrazumevano vrsta knjiženja je UlazIzlaz (3)
+            // Podrazumevano vrsta knjiženja je IZLAZ_SA_PRODAJOM (2)
             Integer vrstaKnjizenja = 2;
 
             // Pozovi novu implementaciju
-            return prenosnicaMpService.dodajPrenosnicu(
+            ResponseEntity<PrenosnicaMpResponse> mpResponse = prenosnicaMpService.dodajPrenosnicu(
                     storeFrom, storeTo, system, newItems.toString(),
                     pricelist, logname, vrstaKnjizenja, null);
 
-        } catch (Exception e) {
-            // Kreiranje odgovora u formatu koji očekuju postojeći klijenti
-            JSONObject errorResponse = new JSONObject();
-            errorResponse.put("success", false);
-            errorResponse.put("error", "Greška: " + e.getMessage());
+            // Konverzija odgovora u format koji očekuju postojeći klijenti
+            if (mpResponse.getBody() != null && mpResponse.getBody().isResponseResult()) {
+                String oznakaDokumenta = "";
+                if (mpResponse.getBody().getPrenosnice() != null && !mpResponse.getBody().getPrenosnice().isEmpty()) {
+                    oznakaDokumenta = mpResponse.getBody().getPrenosnice().get(0).getOznakaDokumenta();
+                }
 
-            return ResponseEntity.status(500).body(errorResponse.toString());
+                return documentUtils.buildSuccessResponse(oznakaDokumenta);
+            } else {
+                String errorMessage = mpResponse.getBody() != null ?
+                        mpResponse.getBody().getErrorMessage() : "Greška prilikom kreiranja prenosnice";
+                return documentUtils.buildErrorResponse(errorMessage);
+            }
+
+        } catch (Exception e) {
+            return documentUtils.buildErrorResponse("Greška: " + e.getMessage());
         }
     }
 }
