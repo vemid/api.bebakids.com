@@ -172,6 +172,11 @@ public class StockService {
                     left join povrat_mp p on p.sif_obj_mp = n.sif_obj_mp and p.ozn_nal_pov_mp = n.ozn_nal_pov_mp
                     where n.storno='N' and p.ozn_nal_pov_mp is null
                     and dat_nal_pov_mp>=cast("01.01."||year(today) as date) and dat_nal_pov_mp>=today-30 and n.sif_obj_mp = ? group by 1,2 
+                    union all
+                    select ns.sif_rob,ns.sif_ent_rob,sum(ns.kolic)*-1 kolic from povrat_mp_st ns
+                    left join povrat_mp p on p.ozn_pov_mp = ns.ozn_pov_mp and p.status=0
+                    where p.storno='N' 
+                    and p.dat_pov_mp>=cast("01.01."||year(today) as date) and dat_pov_mp>=today-30 and p.sif_obj_mp = ? group by 1,2 
                     union all 
                     SELECT ps.sif_rob,ps.sif_ent_rob,sum(ps.kolic)*-1 kolic  from pren_mp_st ps
                     left join pren_mp p on p.ozn_pre_mp = ps.ozn_pre_mp and p.storno = 'N' and p.status =0
