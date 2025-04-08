@@ -27,6 +27,9 @@ public class AppConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(customRequestLoggingInterceptor()).addPathPatterns("/api/**");
+        // Promena: interceptor registrujemo za SVE putanje ako želite univerzalno logovanje
+        // Alternativno, zadržite samo "/api/**" ako želite da logirate samo API zahteve
+        registry.addInterceptor(customRequestLoggingInterceptor())
+                .addPathPatterns("/**");  // "/**" hvata sve putanje, "/api/**" hvata samo API putanje
     }
 }

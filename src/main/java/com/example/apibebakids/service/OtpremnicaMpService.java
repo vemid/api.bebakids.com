@@ -331,7 +331,7 @@ public class OtpremnicaMpService {
                 stmInsertStavke.setBigDecimal(9, null); // cen_zal1
                 stmInsertStavke.setBigDecimal(10, stavka.getOsnovnaCena());
                 stmInsertStavke.setBigDecimal(11, stavka.getProdajnaCena());
-                stmInsertStavke.setString(12, stavka.getSifraTarifneGrupePoreza()); // tar_gru_pp
+                stmInsertStavke.setString(12, "100"); // tar_gru_pp
                 stmInsertStavke.setBigDecimal(13, stavka.getStopaPDV());
                 // Uklonjena linija za tar_gru_ta koja je bila indeks 14
                 stmInsertStavke.setBigDecimal(14, stavka.getIznosAkcize() != null ? stavka.getIznosAkcize() : BigDecimal.ZERO);

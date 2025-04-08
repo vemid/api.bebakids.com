@@ -206,7 +206,7 @@ public class StockService {
                 });
             } else {
                 // For the new query with three parameters, pass storeId three times
-                stockItems = jdbcTemplate.query(sql.toString(), new Object[]{storeId, storeId, storeId}, (rs, rowNum) -> {
+                stockItems = jdbcTemplate.query(sql.toString(), new Object[]{storeId, storeId, storeId, storeId}, (rs, rowNum) -> {
                     StockResponse.StockItem item = new StockResponse.StockItem();
                     item.setSku(rs.getString("sku"));
                     item.setName(rs.getString("name"));
